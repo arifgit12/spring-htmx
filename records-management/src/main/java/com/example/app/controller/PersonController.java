@@ -2,23 +2,30 @@ package com.example.app.controller;
 
 
 import com.example.app.entity.Person;
-import com.example.app.repository.PersonRepository;
+import com.example.app.service.PersonService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PathVariable;
 
-@RestController
-@RequestMapping("/api/person")
+@Controller
 public class PersonController {
 
-    private final PersonRepository personRepository;
+    private static final Logger LOGGER = LoggerFactory.getLogger(PersonController.class);
+    private final PersonService personService;
 
-    public PersonController(PersonRepository personRepository) {
-        this.personRepository = personRepository;
+    public PersonController(PersonService personService) {
+        this.personService = personService;
     }
 
-    @GetMapping
-    public Iterable<Person> findAll(){
-        return personRepository.findAll();
+    @GetMapping("/person/{personId}")
+    public String getPersonDetails(@PathVariable("personId") Long personId, Model model){
+        LOGGER.info("getPersonDetails(...)");
+        Person person = personService.getPersonById(personId);
+        model.addAttribute("person", person);
+        return "dashboard/person-info :: personal-info";
     }
+
 }

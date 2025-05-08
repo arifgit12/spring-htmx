@@ -85,7 +85,7 @@ public class DataLoader implements CommandLineRunner {
         student.setMiddleName("Ali");
         student.setLastName("Mondal");
         student.setSuffix("");
-        student.setSex(Sex.FEMALE);
+        student.setSex(Sex.MALE);
         student.setLastSchoolAttended("Old School");
         student.setCurrentGrade("5th");
 
