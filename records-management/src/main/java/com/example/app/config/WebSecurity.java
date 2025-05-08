@@ -25,6 +25,7 @@ public class WebSecurity {
         return http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/","/welcome","/webjars/**", "/css/**", "/js/**", "/img/**","/error").permitAll()
+                        .requestMatchers("/new-user", "/register").permitAll()
                         .requestMatchers("/dashboard/**").authenticated()
                         .anyRequest().authenticated())
                 .formLogin(form -> form

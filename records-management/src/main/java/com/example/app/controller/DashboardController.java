@@ -3,6 +3,7 @@ package com.example.app.controller;
 
 import com.example.app.entity.User;
 import com.example.app.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -30,12 +31,18 @@ public class DashboardController {
     }
 
     @GetMapping("/dashboard")
-    public String getDashboard(@AuthenticationPrincipal UserDetails userDetails, Model model) {
+    public String getDashboard(@AuthenticationPrincipal UserDetails userDetails,
+                               HttpServletRequest request,
+                               Model model) {
         Optional<User> optionalUser = userService.findByEmail(userDetails.getUsername());
-        if (optionalUser.isPresent()) {
+        boolean isHtmxRequest = request.getHeader("HX-Request") != null;
 
+        if (optionalUser.isPresent()) {
             User user = optionalUser.get();
             model.addAttribute("user", user);
+            model.addAttribute("person", user.getPerson());
+            model.addAttribute("personId", user.getPerson().getPersonId());
+            model.addAttribute("isHtmxRequest", isHtmxRequest);
             return "dashboard/dashboard";
         } else {
             // Handle the case where the user is not found (optional)

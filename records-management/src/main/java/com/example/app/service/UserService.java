@@ -1,29 +1,40 @@
 package com.example.app.service;
 
+import com.example.app.controller.dto.ErrorUtil;
+import com.example.app.controller.dto.RegistrationResponse;
+import com.example.app.controller.dto.UserDto;
 import com.example.app.entity.Person;
+import com.example.app.entity.PersonType;
 import com.example.app.entity.Role;
 import com.example.app.entity.User;
+import com.example.app.exception.PersonDoesNotExistException;
 import com.example.app.repository.PersonRepository;
 import com.example.app.repository.RoleRepository;
 import com.example.app.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Service
 public class UserService {
 
+    private static Logger LOGGER = LoggerFactory.getLogger(UserService.class);
+
     private final UserRepository userRepository;
     private final PersonRepository personRepository;
     private final RoleRepository roleRepository;
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public UserService(UserRepository userRepository, PersonRepository personRepository, RoleRepository roleRepository, @Lazy PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository,
+                       PersonRepository personRepository,
+                       RoleRepository roleRepository,
+                       @Lazy PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.personRepository = personRepository;
         this.roleRepository = roleRepository;
@@ -31,7 +42,10 @@ public class UserService {
     }
 
     public User createUser(String email, String rawPassword, Person person, Set<Role> roles) {
+        LOGGER.info("createUser(...)");
+        LOGGER.info("raw password: " + rawPassword);
         String encodedPassword = passwordEncoder.encode(rawPassword);
+        LOGGER.info("encoded password: " + encodedPassword);
         User user = new User();
         user.setEmail(email);
         user.setPassword(encodedPassword);
@@ -42,6 +56,7 @@ public class UserService {
         person.setUser(newUser);
         personRepository.save(person);
 
+        LOGGER.info("new user and person persisted");
         return newUser;
     }
 
@@ -69,5 +84,48 @@ public class UserService {
         User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
         user.setEnabled(true);
         userRepository.save(user);
+    }
+
+    public RegistrationResponse registerUser(final UserDto userDto) {
+        Map<String, String> errors = new HashMap<>();
+
+        Optional<User> byEmail = findByEmail(userDto.email());
+        if(byEmail.isPresent()){
+            errors.put("error", "Email already Exists");
+            return new RegistrationResponse(false, "Registration Failed", ErrorUtil.mapToObjectErrorList(errors));
+        }
+
+
+        try {
+            LOGGER.info("registerUser(...)");
+            Person person = new Person();
+            person.setFirstName(userDto.firstName());
+            person.setLastName(userDto.lastName());
+            person.setMiddleName(userDto.middleName());
+            person.setPersonType(PersonType.valueOf(userDto.personType()));
+
+            LOGGER.info(person.getPersonType().name());
+            //persist new person first.
+            personRepository.save(person);
+
+            Set<Role> roles = new HashSet<>();
+            roles.add(createRole("USER"));
+
+            createUser(userDto.email(), userDto.password(), person, roles);
+
+            return new RegistrationResponse(true,"User Account successfully created");
+        } catch (IllegalArgumentException e) {
+            errors.put("system", "An unexpected error occurred during registration");
+            return new RegistrationResponse(false,"Registration Failed", ErrorUtil.mapToObjectErrorList(errors));
+        }
+    }
+
+    public Person findPersonByEmailUser(final String email) {
+        Optional<User> byEmail = userRepository.findByEmail(email);
+        if(byEmail.isPresent()){
+            return byEmail.get().getPerson();
+        } else {
+            throw new PersonDoesNotExistException();
+        }
     }
 }
