@@ -23,4 +23,8 @@ public class PersonService {
             throw new PersonDoesNotExistException("Person with ID " + personId + " does not exist");
         }
     }
+
+    public void savePerson(Person existingPerson) {
+        personRepository.save(existingPerson);
+    }
 }

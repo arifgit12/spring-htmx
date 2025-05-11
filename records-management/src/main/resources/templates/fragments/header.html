@@ -58,7 +58,10 @@
                             </li>
                             <!-- Public Links -->
                             <li>
-                                <a class="nav-link text-white-50" th:href="@{/dashboard}">
+                                <a class="nav-link text-white-50" th:href="@{/dashboard}"
+                                    th:hx-get="@{/dashboard}"
+                                    hx-target="body"
+                                    hx-swap="innerHtml transition:true">
                                     <i class="fa-solid fa-house"></i>
                                     Home
                                 </a>

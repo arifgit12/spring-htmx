@@ -1,38 +1,132 @@
 package com.example.app.entity;
 
+import com.example.app.annotation.MarkForReview;
+import com.example.app.annotation.RequirementLevel;
 import jakarta.persistence.*;
 import java.util.Set;
 
+import java.util.HashSet;
+
 @Entity
 public class Person {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long personId;
+
+    @MarkForReview(
+            name = "Employment Status",
+            description = "Indicates if the person is employed, unemployed or self employed",
+            level = RequirementLevel.REQUIRED,
+            relatedField = "employers", // This points to the related Employer entity.
+            conditionField = "employmentStatus" // This indicates that the related entity should be checked only if employment status is unemployed.
+    )
+    private EmploymentStatus employmentStatus;
+
+
+    @MarkForReview(
+            name = "Prefix",
+            description = "Title before the person's name (e.g., Mr., Ms., Dr.)",
+            level = RequirementLevel.SUGGESTED
+    )
     private String prefix;
+
+    @MarkForReview(
+            name = "First Name",
+            description = "The first name of the person",
+            level = RequirementLevel.REQUIRED
+    )
     private String firstName;
+
+    @MarkForReview(
+            name = "Middle Name",
+            description = "The middle name of the person, if available",
+            level = RequirementLevel.SUGGESTED
+    )
     private String middleName;
+
+    @MarkForReview(
+            name = "Last Name",
+            description = "The last name of the person",
+            level = RequirementLevel.REQUIRED
+    )
     private String lastName;
+
     private String suffix;
 
     @OneToOne
     @JoinColumn(name = "user_id")
     private User user;
 
+    @MarkForReview(
+            name = "Email Addresses",
+            description = "Set of email addresses associated with the person",
+            level = RequirementLevel.REQUIRED
+    )
     @OneToMany(mappedBy = "person", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Email> emails;
 
+    @MarkForReview(
+            name = "Phone Numbers",
+            description = "Set of phone numbers associated with the person",
+            level = RequirementLevel.REQUIRED
+    )
     @OneToMany(mappedBy = "person", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<PhoneNumber> phoneNumbers;
 
+    @MarkForReview(
+            name = "Person Type",
+            description = "Type of person (e.g., STUDENT, GUARDIAN)",
+            level = RequirementLevel.REQUIRED
+    )
     @Enumerated(EnumType.STRING)
     private PersonType personType;
 
+    @MarkForReview(
+            name = "Person - Legal Guardian Type",
+            description = "Type of legal guardian if the person is a guardian",
+            level = RequirementLevel.REQUIRED
+    )
     @Enumerated(EnumType.STRING)
     private LegalGuardianType legalGuardianType;
 
     @ManyToMany(mappedBy = "guardians")
     private Set<Student> students;
+
+    @OneToMany(mappedBy = "person", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Employer> employers = new HashSet<>();
+
+    @OneToMany(mappedBy = "person", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<PersonAddress> addresses = new HashSet<>();
+
+    public Set<PersonAddress> getAddresses() {
+        return addresses;
+    }
+
+    public void setAddresses(Set<PersonAddress> addresses) {
+        this.addresses = addresses;
+    }
+
+    public void addAddress(PersonAddress address) {
+        addresses.add(address);
+        address.setPerson(this);
+    }
+
+    public void removeAddress(PersonAddress address) {
+        addresses.remove(address);
+        address.setPerson(null);
+    }
+
+    // Helper method to add an employer
+    public void addEmployer(Employer employer) {
+        employers.add(employer);
+        employer.setPerson(this);
+    }
+
+    // Helper method to remove an employer
+    public void removeEmployer(Employer employer) {
+        employers.remove(employer);
+        employer.setPerson(null);
+    }
 
     // Getters and Setters
     public Long getPersonId() {
@@ -130,4 +224,21 @@ public class Person {
     public void setStudents(Set<Student> students) {
         this.students = students;
     }
+
+    public Set<Employer> getEmployers() {
+        return employers;
+    }
+
+    public void setEmployers(Set<Employer> employers) {
+        this.employers = employers;
+    }
+
+    public EmploymentStatus getEmploymentStatus() {
+        return employmentStatus;
+    }
+
+    public void setEmploymentStatus(EmploymentStatus employmentStatus) {
+        this.employmentStatus = employmentStatus;
+    }
 }
+

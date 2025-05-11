@@ -3,11 +3,9 @@ package com.example.app.service;
 import com.example.app.controller.dto.ErrorUtil;
 import com.example.app.controller.dto.RegistrationResponse;
 import com.example.app.controller.dto.UserDto;
-import com.example.app.entity.Person;
-import com.example.app.entity.PersonType;
-import com.example.app.entity.Role;
-import com.example.app.entity.User;
+import com.example.app.entity.*;
 import com.example.app.exception.PersonDoesNotExistException;
+import com.example.app.repository.EmailRepository;
 import com.example.app.repository.PersonRepository;
 import com.example.app.repository.RoleRepository;
 import com.example.app.repository.UserRepository;
@@ -29,16 +27,18 @@ public class UserService {
     private final PersonRepository personRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailRepository emailRepository;
 
     @Autowired
     public UserService(UserRepository userRepository,
                        PersonRepository personRepository,
                        RoleRepository roleRepository,
-                       @Lazy PasswordEncoder passwordEncoder) {
+                       @Lazy PasswordEncoder passwordEncoder, EmailRepository emailRepository) {
         this.userRepository = userRepository;
         this.personRepository = personRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
+        this.emailRepository = emailRepository;
     }
 
     public User createUser(String email, String rawPassword, Person person, Set<Role> roles) {
@@ -104,9 +104,16 @@ public class UserService {
             person.setMiddleName(userDto.middleName());
             person.setPersonType(PersonType.valueOf(userDto.personType()));
 
+            Email email = new Email();
+            email.setEmailAddress(userDto.email());
+            email.setType(EmailType.PERSONAL);
+
             LOGGER.info(person.getPersonType().name());
             //persist new person first.
-            personRepository.save(person);
+            Person savedPerson = personRepository.save(person);
+            email.setPerson(savedPerson);
+            emailRepository.save(email);
+
 
             Set<Role> roles = new HashSet<>();
             roles.add(createRole("USER"));

@@ -1,5 +1,7 @@
 package com.example.app.entity;
 
+import com.example.app.annotation.MarkForReview;
+import com.example.app.annotation.RequirementLevel;
 import jakarta.persistence.*;
 
 @Entity
@@ -7,8 +9,17 @@ public class Email {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long emailId;
-    private String email;
-
+    @MarkForReview(
+            name = "Email Address",
+            description = "Email address of the person",
+            level = RequirementLevel.REQUIRED
+    )
+    private String emailAddress;
+    @MarkForReview(
+            name = "Email Address Type",
+            description = "The type of Email address of the person (home, work, school, etc...)",
+            level = RequirementLevel.REQUIRED
+    )
     @Enumerated(EnumType.STRING)
     private EmailType type;
 
@@ -25,12 +36,12 @@ public class Email {
         this.emailId = emailId;
     }
 
-    public String getEmail() {
-        return email;
+    public String getEmailAddress() {
+        return emailAddress;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setEmailAddress(String emailAddress) {
+        this.emailAddress = emailAddress;
     }
 
     public EmailType getType() {
@@ -49,3 +60,4 @@ public class Email {
         this.person = person;
     }
 }
+

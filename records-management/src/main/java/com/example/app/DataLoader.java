@@ -32,20 +32,21 @@ public class DataLoader implements CommandLineRunner {
         // Create a person
         Person person = new Person();
         person.setPrefix("Mr.");
-        person.setFirstName("John");
-        person.setMiddleName("Justin");
-        person.setLastName("Jacobs Sr");
+        person.setFirstName("Arif");
+        person.setMiddleName("Ali");
+        person.setLastName("Mondal");
         person.setSuffix("III");
         person.setPersonType(PersonType.FATHER);
+        person.setEmploymentStatus(EmploymentStatus.EMPLOYED);
 
         // Create emails
         Email personalEmail = new Email();
-        personalEmail.setEmail("john.jacobs.personal@mail.com");
+        personalEmail.setEmailAddress("arifmondal.personal@mail.com");
         personalEmail.setType(EmailType.PERSONAL);
         personalEmail.setPerson(person);
 
         Email workEmail = new Email();
-        workEmail.setEmail("john.jacobs.work@mail.com");
+        workEmail.setEmailAddress("arifmondal.work@mail.com");
         workEmail.setType(EmailType.WORK);
         workEmail.setPerson(person);
 
@@ -70,7 +71,50 @@ public class DataLoader implements CommandLineRunner {
         phoneNumbers.add(mobilePhone);
         person.setPhoneNumbers(phoneNumbers);
 
-        // Save the person
+        // Create and associate an employer if employed
+        if (person.getEmploymentStatus().equals(EmploymentStatus.UNEMPLOYED)) {
+            Employer employer = new Employer();
+            employer.setBusinessName("TechCorp");
+            employer.setAddress1("123 Tech Lane");
+            employer.setCity("Innovation City");
+            employer.setState("TechState");
+            employer.setCountry("Techland");
+            employer.setZip("12345");
+            employer.setSupervisorName("Sarah Supervisor");
+            employer.setSupervisorPhoneNumber("321-654-0987");
+            employer.setSupervisorEmail("sarah.supervisor@techcorp.com");
+
+            // Use the helper method to add the employer to the person
+            person.addEmployer(employer);
+        }
+
+
+        // Create and add addresses to the person
+        PersonAddress mailingAddress = new PersonAddress();
+        mailingAddress.setAddressType(AddressType.MAILING);
+        mailingAddress.setAddress1("789 Maple Street");
+        mailingAddress.setAddress2("Apt 101");
+        mailingAddress.setCity("Hometown");
+        mailingAddress.setState("HomeState");
+        mailingAddress.setZip("56789");
+        mailingAddress.setCountryCd("US");
+        mailingAddress.setPerson(person);  // Associate with person
+
+        PersonAddress physicalAddress = new PersonAddress();
+        physicalAddress.setAddressType(AddressType.PHYSICAL);
+        physicalAddress.setAddress1("456 Oak Avenue");
+        physicalAddress.setCity("Worktown");
+        physicalAddress.setState("WorkState");
+        physicalAddress.setZip("98765");
+        physicalAddress.setCountryCd("US");
+        physicalAddress.setPerson(person);  // Associate with person
+
+        Set<PersonAddress> addresses = new HashSet<>();
+        addresses.add(mailingAddress);
+        addresses.add(physicalAddress);
+        person.setAddresses(addresses);  // Associate addresses with person
+
+        // Save the person (including the employers and addresses)
         personRepository.save(person);
 
         // Create a user with a hashed password and assign roles
